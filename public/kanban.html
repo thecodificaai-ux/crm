@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanban de Oportunidades | CRM Solvitta</title>
+    <!-- TailwindCSS para estilização rápida -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase Client para conectar ao banco -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- SortableJS para a mágica do Drag and Drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <style>
+        /* Estilos para a barra de rolagem e para os cards */
+        body { background-color: #f0f2f5; }
+        .kanban-column { min-width: 300px; max-width: 320px; }
+        .kanban-cards-container {
+            height: calc(100vh - 150px ); /* Ajusta a altura para preencher a tela */
+            overflow-y: auto;
+        }
+        .kanban-card {
+            cursor: grab;
+            transition: background-color 0.2s;
+        }
+        .kanban-card:hover {
+            background-color: #f9fafb;
+        }
+        .ghost-card {
+            opacity: 0.4;
+            background: #cce5ff;
+            border: 1px dashed #007bff;
+        }
+    </style>
+</head>
+<body class="p-4">
+    <header class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">Kanban de Oportunidades</h1>
+        <p class="text-gray-600">Arraste os cards para atualizar o estágio das oportunidades.</p>
+    </header>
+
+    <!-- O quadro Kanban será renderizado aqui pelo JavaScript -->
+    <div id="kanban-board" class="flex space-x-4 overflow-x-auto pb-4">
+        <!-- Exemplo de como uma coluna será (será gerado dinamicamente) -->
+        <!-- 
+        <div class="kanban-column bg-gray-100 rounded-lg p-3">
+            <h2 class="font-bold text-lg mb-4 text-gray-700">Nova</h2>
+            <div class="kanban-cards-container space-y-3">
+                <div class="kanban-card bg-white p-4 rounded-md shadow">
+                    <h3 class="font-semibold">Projeto Solar - João da Silva</h3>
+                    <p class="text-sm text-gray-500">R$ 25.000,00</p>
+                    <p class="text-xs text-gray-400 mt-2">Vendedor: Willian</p>
+                </div>
+            </div>
+        </div>
+        -->
+    </div>
+
+    <!-- Nosso script principal -->
+    <script src="kanban.js"></script>
+</body>
+</html>
