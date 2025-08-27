@@ -7,15 +7,9 @@ const SUPABASE_ANON_KEY = '%SUPABASE_ANON_KEY%';
 const finalSupabaseUrl = SUPABASE_URL.startsWith('%') ? 'https://jgnidubgrwghqsbmthvh.supabase.co' : SUPABASE_URL;
 const finalSupabaseAnonKey = SUPABASE_ANON_KEY.startsWith('%' ) ? 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpnbmlkdWJncndnaHFzYm10aHZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyMzQ0OTQsImV4cCI6MjA2ODgxMDQ5NH0.CYJjbhiPejjqjUZzOnG2H0x-MmFj8QhjR9SUyDYSvtw' : SUPABASE_ANON_KEY;
 
-// =================================================================
-// CORREÇÃO APLICADA AQUI
-// Desestrutura o createClient do objeto global 'supabase' fornecido pelo CDN
-// =================================================================
 const { createClient } = window.supabase;
 const supabase = createClient(finalSupabaseUrl, finalSupabaseAnonKey);
 
-
-// Define a ordem exata das colunas do Kanban
 const STAGES_ORDER = [
     'Nova',
     'Qualificada',
@@ -28,10 +22,10 @@ const STAGES_ORDER = [
 
 // --- FUNÇÕES ---
 
-/**
- * Busca todas as oportunidades e os dados relacionados.
- */
 async function fetchOpportunities() {
+    // =================================================================
+    // CORREÇÃO APLICADA AQUI: Especificando a relação com a tabela 'contacts'
+    // =================================================================
     const { data, error } = await supabase
         .from('opportunities')
         .select(`
@@ -39,42 +33,34 @@ async function fetchOpportunities() {
             opportunity_title,
             stage,
             estimated_value,
-            contacts ( full_name ),
+            contacts:contacts!opportunities_contact_id_fkey ( full_name ),
             users ( agent_name )
         `)
         .order('created_at', { ascending: false });
 
     if (error) {
         console.error('Erro ao buscar oportunidades:', error);
-        // Adiciona um alerta na tela para o usuário
         alert(`Erro ao carregar dados: ${error.message}`);
         return [];
     }
     return data;
 }
 
-/**
- * Renderiza o quadro Kanban completo na tela.
- * @param {Array} opportunities - A lista de oportunidades vinda do Supabase.
- */
 function renderKanban(opportunities) {
     const board = document.getElementById('kanban-board');
     if (!board) {
         console.error('Elemento #kanban-board não encontrado.');
         return;
     }
-    board.innerHTML = ''; // Limpa o quadro antes de renderizar
+    board.innerHTML = '';
 
-    // Agrupa as oportunidades por estágio
     const opportunitiesByStage = STAGES_ORDER.reduce((acc, stage) => {
         acc[stage] = opportunities.filter(opp => opp.stage === stage);
         return acc;
     }, {});
 
-    // Cria cada coluna
     for (const stage of STAGES_ORDER) {
         const opportunitiesInStage = opportunitiesByStage[stage];
-
         const columnEl = document.createElement('div');
         columnEl.className = 'kanban-column bg-gray-100 rounded-lg p-3';
         columnEl.dataset.stage = stage;
@@ -108,13 +94,9 @@ function renderKanban(opportunities) {
     }
 }
 
-/**
- * Função principal que inicializa a página.
- */
 async function initializeApp() {
     const opportunities = await fetchOpportunities();
     renderKanban(opportunities);
 }
 
-// Inicia a aplicação quando a página carrega
 document.addEventListener('DOMContentLoaded', initializeApp);
