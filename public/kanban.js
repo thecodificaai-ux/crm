@@ -23,9 +23,6 @@ const STAGES_ORDER = [
 // --- FUNÇÕES ---
 
 async function fetchOpportunities() {
-    // =================================================================
-    // CORREÇÃO APLICADA AQUI: Especificando a relação com a tabela 'contacts'
-    // =================================================================
     const { data, error } = await supabase
         .from('opportunities')
         .select(`
@@ -85,7 +82,7 @@ function renderKanban(opportunities) {
                 <span>${stage}</span>
                 <span class="text-sm bg-gray-300 text-gray-600 rounded-full px-2 py-1">${opportunitiesInStage.length}</span>
             </h2>
-            <div class="kanban-cards-container space-y-3" id="column-${stage.replace(/\s+/g, '-')}">
+            <div class="kanban-cards-container space-y-3" data-stage-container="${stage}">
                 ${cardsHtml}
             </div>
         `;
@@ -94,9 +91,61 @@ function renderKanban(opportunities) {
     }
 }
 
+/**
+ * Atualiza o estágio de uma oportunidade no banco de dados.
+ * @param {string} opportunityId - O ID da oportunidade a ser atualizada.
+ * @param {string} newStage - O novo estágio para a oportunidade.
+ */
+async function updateOpportunityStage(opportunityId, newStage) {
+    const { error } = await supabase
+        .from('opportunities')
+        .update({ stage: newStage })
+        .eq('public_id', opportunityId);
+
+    if (error) {
+        console.error(`Erro ao atualizar o estágio para ${newStage}:`, error);
+        alert(`Falha ao mover o card: ${error.message}`);
+        // Futuramente, podemos adicionar uma lógica para reverter a mudança visual se a atualização falhar.
+    } else {
+        console.log(`Oportunidade ${opportunityId} movida para ${newStage} com sucesso!`);
+    }
+}
+
+/**
+ * Inicializa a funcionalidade de arrastar e soltar em todas as colunas.
+ */
+function initializeDragAndDrop() {
+    const columns = document.querySelectorAll('.kanban-cards-container');
+    
+    columns.forEach(column => {
+        new Sortable(column, {
+            group: 'kanban', // Permite mover cards entre colunas com o mesmo grupo
+            animation: 150,
+            ghostClass: 'ghost-card', // Classe CSS para o "fantasma" do card enquanto arrasta
+            onEnd: (evt) => {
+                // Evento disparado quando o card é solto
+                const card = evt.item;
+                const opportunityId = card.dataset.id;
+                const newColumn = evt.to;
+                const newStage = newColumn.closest('.kanban-column').dataset.stage;
+
+                console.log(`Card ${opportunityId} movido para a coluna ${newStage}`);
+                
+                // Chama a função para atualizar o banco de dados
+                updateOpportunityStage(opportunityId, newStage);
+            }
+        });
+    });
+}
+
+/**
+ * Função principal que inicializa a página.
+ */
 async function initializeApp() {
     const opportunities = await fetchOpportunities();
     renderKanban(opportunities);
+    initializeDragAndDrop(); // Ativa o Drag and Drop após renderizar
 }
 
+// Inicia a aplicação quando a página carrega
 document.addEventListener('DOMContentLoaded', initializeApp);
