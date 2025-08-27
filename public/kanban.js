@@ -1,16 +1,19 @@
 // kanban.js
 
 // --- CONFIGURAÇÃO ---
-// A Vercel substituirá estes valores durante o build.
-// Para rodar localmente, você pode substituir os placeholders pelas suas chaves.
 const SUPABASE_URL = '%SUPABASE_URL%';
 const SUPABASE_ANON_KEY = '%SUPABASE_ANON_KEY%';
 
-// Se os placeholders não forem substituídos (rodando localmente), use as variáveis de ambiente locais ou defina-as aqui.
 const finalSupabaseUrl = SUPABASE_URL.startsWith('%') ? 'https://jgnidubgrwghqsbmthvh.supabase.co' : SUPABASE_URL;
-const finalSupabaseAnonKey = SUPABASE_ANON_KEY.startsWith('%') ? 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpnbmlkdWJncndnaHFzYm10aHZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyMzQ0OTQsImV4cCI6MjA2ODgxMDQ5NH0.CYJjbhiPejjqjUZzOnG2H0x-MmFj8QhjR9SUyDYSvtw' : SUPABASE_ANON_KEY;
+const finalSupabaseAnonKey = SUPABASE_ANON_KEY.startsWith('%' ) ? 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpnbmlkdWJncndnaHFzYm10aHZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyMzQ0OTQsImV4cCI6MjA2ODgxMDQ5NH0.CYJjbhiPejjqjUZzOnG2H0x-MmFj8QhjR9SUyDYSvtw' : SUPABASE_ANON_KEY;
 
-const supabase = supabase.createClient(finalSupabaseUrl, finalSupabaseAnonKey);
+// =================================================================
+// CORREÇÃO APLICADA AQUI
+// Desestrutura o createClient do objeto global 'supabase' fornecido pelo CDN
+// =================================================================
+const { createClient } = window.supabase;
+const supabase = createClient(finalSupabaseUrl, finalSupabaseAnonKey);
+
 
 // Define a ordem exata das colunas do Kanban
 const STAGES_ORDER = [
@@ -43,6 +46,8 @@ async function fetchOpportunities() {
 
     if (error) {
         console.error('Erro ao buscar oportunidades:', error);
+        // Adiciona um alerta na tela para o usuário
+        alert(`Erro ao carregar dados: ${error.message}`);
         return [];
     }
     return data;
@@ -54,6 +59,10 @@ async function fetchOpportunities() {
  */
 function renderKanban(opportunities) {
     const board = document.getElementById('kanban-board');
+    if (!board) {
+        console.error('Elemento #kanban-board não encontrado.');
+        return;
+    }
     board.innerHTML = ''; // Limpa o quadro antes de renderizar
 
     // Agrupa as oportunidades por estágio
@@ -68,7 +77,7 @@ function renderKanban(opportunities) {
 
         const columnEl = document.createElement('div');
         columnEl.className = 'kanban-column bg-gray-100 rounded-lg p-3';
-        columnEl.dataset.stage = stage; // Atributo para identificar a coluna
+        columnEl.dataset.stage = stage;
 
         const cardsHtml = opportunitiesInStage.map(opp => `
             <div class="kanban-card bg-white p-4 rounded-md shadow" data-id="${opp.public_id}">
@@ -97,10 +106,7 @@ function renderKanban(opportunities) {
         
         board.appendChild(columnEl);
     }
-    
-    // (O código para Drag and Drop será adicionado aqui no próximo passo)
 }
-
 
 /**
  * Função principal que inicializa a página.
